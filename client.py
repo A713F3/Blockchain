@@ -5,6 +5,8 @@ class Client:
     def __init__(self,nick):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+        self.money = 5
+
         self.keep =  True
         self.nick = nick
 
@@ -25,13 +27,14 @@ class Client:
 
     def write(self):
         while self.keep:
-            message = input("\n >")
+            receiver = input("Send to >")
+            amount = input("Amount >")
 
-            if message == "__q__":
+            if receiver == "__q__":
                 self.stop()
 
-            message = "{}: {}".format(self.nick, message)
-            self.client.send(message.encode("utf-8"))
+            data = "{}-{}:{}".format(self.nick, receiver, amount)
+            self.client.send(data.encode("utf-8"))
 
     def start(self):
         try:
@@ -57,5 +60,3 @@ client = Client(name)
 
 client.start()
 
-    
-##Syncronise receive before write so ">" doesn't overlaps

@@ -19,6 +19,7 @@ class Server:
             try:
                 message = client.recv(1024)
                 self.broadcast(message)
+                print(message)
             except:
                 self.clients.remove(client)
                 client.close()

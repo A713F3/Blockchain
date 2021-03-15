@@ -12,7 +12,51 @@ class Client:
         self.nick = nick
 
         self.lock = threading.Lock() 
+    
+    """
+        Start a connection with server
+    """
+    def start(self):
+        try:
+            self.client.connect(("192.168.1.26", 55555))
+            print("Connected to the Server!")
+            self.client.send(f"::{self.nick}".encode("utf-8"))
+        except:
+            print("Connection Error!")
+            self.stop()
+        
+        # Starting a thread for receiving messages from server
+        receive_thread = threading.Thread(target=self.receive)
+        receive_thread.start()
 
+        # Starting a thread for sending messages to server
+        write_thread = threading.Thread(target=self.write)
+        write_thread.start()
+
+    """
+        Stop connection
+    """
+    def stop(self):
+        self.keep = False
+        self.client.close()
+
+    """
+        For sending messages to server
+    """
+    def write(self):
+        while self.keep:
+            receiver = input("Receiver> ")
+            amount = input("Amount> ")
+
+            if receiver == "__q__":
+                self.stop()
+
+            data = "{}-{}:{}".format(self.nick, receiver, amount)
+            self.client.send(data.encode("utf-8"))
+
+    """
+        For receiving messages from server
+    """
     def receive(self):
         while self.keep:
             #self.lock.acquire()
@@ -25,36 +69,6 @@ class Client:
                 self.client.close()
                 break
             #self.lock.release()
-
-    def write(self):
-        while self.keep:
-            receiver = input("Receiver> ")
-            amount = input("Amount> ")
-
-            if receiver == "__q__":
-                self.stop()
-
-            data = "{}-{}:{}".format(self.nick, receiver, amount)
-            self.client.send(data.encode("utf-8"))
-
-    def start(self):
-        try:
-            self.client.connect(("192.168.1.26", 55555))
-            print("Connected to the Server!")
-            self.client.send(f"::{self.nick}".encode("utf-8"))
-        except:
-            print("Connection Error!")
-            self.stop()
-        
-        receive_thread = threading.Thread(target=self.receive)
-        receive_thread.start()
-
-        write_thread = threading.Thread(target=self.write)
-        write_thread.start()
-
-    def stop(self):
-        self.keep = False
-        self.client.close()
 
 name = input("Enter name: ")
 

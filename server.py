@@ -8,11 +8,12 @@ class Server:
         self.s.bind(("192.168.1.26", 55555))
 
         try:
-            self.clients = pickle.load(open("clients.p", "rb"))
-            self.clients = pickle.load(open("client_names.p", "rb"))
+            self.adresses = pickle.load(open("clients.p", "rb"))
+            self.clients = []
+        
         except:
             self.clients = []
-            self.client_names = []
+            self.adresses = {}
 
         self.keep = True
 
@@ -25,17 +26,20 @@ class Server:
         #for client in self.clients:
         #    client.send(message)
 
-    def handle(self, client):
+    def handle(self, client, adress):
         while self.keep:
             try:
                 message = client.recv(1024)
                 self.broadcast(message, client)
-                print(message)
+                if message[:2] == b'::':
+                    self.adresses[adress] = message[2:]
+
+                print(f"{self.adresses[adress]} {message}")
             except:
                 self.clients.remove(client)
                 client.close()
                 break
-        
+    
     def commands(self):
         command = input()
 
@@ -47,14 +51,15 @@ class Server:
             client, adress = self.s.accept()
             
             if client in self.clients: 
-                print(f"{self.adress_names[self.adresses.indexof(adress)]} is connected")
+                print(f"{self.adresses[adress]} is connected")
             else:
                 print(f"{adress} is connected.")
 
                 self.clients.append(client)
+                self.adresses[adress] = "--"
             
 
-            handle_thread = threading.Thread(target=self.handle, args=(client,))
+            handle_thread = threading.Thread(target=self.handle, args=(client,adress))
             handle_thread.start()
             
             
@@ -70,9 +75,8 @@ class Server:
         command_thread.start()
 
     def stop(self):
+        pickle.dump(self.adresses, open( "clients.p", "wb" ))
         self.keep = False  
-        pickle.dump(self.clients, open( "clients.p", "wb" ))
-        pickle.dump(self.client_names, open( "client_names.p", "wb" ))
         self.s.close()
 
 server = Server()

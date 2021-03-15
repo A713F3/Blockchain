@@ -41,7 +41,7 @@ class Client:
         try:
             self.client.connect(("192.168.1.26", 55555))
             print("Connected to the Server!")
-            self.client.send(f"{self.nick}".encode("utf-8"))
+            self.client.send(f"::{self.nick}".encode("utf-8"))
         except:
             print("Connection Error!")
             self.stop()

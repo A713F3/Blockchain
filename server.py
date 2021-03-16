@@ -1,25 +1,23 @@
 import socket
 import threading
-import pickle
 
 class Server:
     def __init__(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.bind(("192.168.1.26", 55555))
 
-        try:
-            self.adresses = pickle.load(open("clients.p", "rb"))
-            self.clients = []
-        
-        except:
-            self.clients = []
-            self.adresses = {}
+        self.keep = True
+
+        self.clients = []
+        self.names = []
 
     """
         Start Server
     """
     def start(self):
         self.s.listen()
+
+        self.keep = True
 
         print("Server is listening...")
 
@@ -35,12 +33,9 @@ class Server:
         Stop Server
     """
     def stop(self):
-        pickle.dump(self.adresses, open( "clients.p", "wb" ))
         self.keep = False  
         self.s.close()
-
-        self.keep = True
-
+        
     """
         Broadcast message to a client
     """
@@ -57,17 +52,22 @@ class Server:
     """
         Handle each clients messages
     """
-    def handle(self, client, adress):
+    def handle(self, client):
         while self.keep:
             try:
+                # Receive message from client and send
                 message = client.recv(1024)
                 self.broadcast(message, client)
-                if message[:2] == b'::':
-                    self.adresses[adress] = message[2:]
 
-                print(f"{self.adresses[adress]} {message}")
+                index = self.clients.index(client)
+                print(f"{names[index]}: {message}")
+
             except:
-                self.clients.remove(client)
+                index = self.clients.index(client)
+
+                del self.clients[index]
+                del self.names[index]
+
                 client.close()
                 break
     
@@ -78,18 +78,18 @@ class Server:
         while self.keep:
             # Accept client
             client, adress = self.s.accept()
-            
-            # If client is known
-            if client in self.clients: 
-                print(f"{self.adresses[adress]} is connected")
-            else:
-                print(f"{adress} is connected.")
 
-                self.clients.append(client)
-                self.adresses[adress] = "--"
+            # Request and get clients name
+            client.send('NICK'.encode('ascii'))
+            name = client.recv(1024).decode('ascii')
+
+            self.clients.append(client) 
+            self.names.append(name)
+            
+            print(f"{name} connected with: {adress}")
             
             # After aceepting client to start a thread for messages
-            handle_thread = threading.Thread(target=self.handle, args=(client,adress))
+            handle_thread = threading.Thread(target=self.handle, args=(client,))
             handle_thread.start()
 
     """
@@ -100,6 +100,9 @@ class Server:
 
         if command == "q":
             self.stop()
+        if command == "clients":
+            print(self.clients)
+            print(self.names)
 
 if __name__ == "__main__":
     server = Server()

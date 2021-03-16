@@ -1,6 +1,5 @@
 import socket
 import threading
-import pickle
 
 class Client:
     def __init__(self,nick):
@@ -20,7 +19,7 @@ class Client:
         try:
             self.client.connect(("192.168.1.26", 55555))
             print("Connected to the Server!")
-            self.client.send(f"::{self.nick}".encode("utf-8"))
+
         except:
             print("Connection Error!")
             self.stop()
@@ -46,13 +45,15 @@ class Client:
     def write(self):
         while self.keep:
             receiver = input("Receiver> ")
-            amount = input("Amount> ")
 
-            if receiver == "__q__":
+            """if receiver == "_q_":
                 self.stop()
 
-            data = "{}-{}:{}".format(self.nick, receiver, amount)
-            self.client.send(data.encode("utf-8"))
+            amount = input("Amount> ")      
+
+            data = "{}-{}:{}".format(self.nick, receiver, amount) """           
+
+            self.client.send(receiver.encode("ascii"))
 
     """
         For receiving messages from server
@@ -62,11 +63,15 @@ class Client:
             #self.lock.acquire()
             try:
                 message = self.client.recv(1024).decode('ascii')
-                print(message)
 
+                if message == 'NICK':
+                    self.client.send(self.nick.encode('ascii'))
+                else:
+                    print(f"Server: {message}")
+                
             except:
                 print("An error occured!")
-                self.client.close()
+                self.stop()
                 break
             #self.lock.release()
 

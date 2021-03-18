@@ -17,10 +17,10 @@ class Client:
     """
     def start(self):
         try:
-            self.client.connect(("192.168.1.26", 55555))
+            self.client.connect(("192.168.1.25", 55555))
             print("Connected to the Server!")
 
-        except:
+        except Exception:
             print("Connection Error!")
             self.stop()
         
@@ -45,35 +45,43 @@ class Client:
     def write(self):
         while self.keep:
             receiver = input("Receiver> ")
-
-            """if receiver == "_q_":
+            if receiver == "__q__":
                 self.stop()
+                break
 
-            amount = input("Amount> ")      
+            amount = input("Amount> ")    
+            if amount == "__q__":
+                self.stop()
+                break  
 
-            data = "{}-{}:{}".format(self.nick, receiver, amount) """           
+            data = "{}-{}:{}".format(self.nick, receiver, amount)     
 
-            self.client.send(receiver.encode("ascii"))
+            try:    
+                self.client.send(data.encode("ascii"))
+            except Exception:
+                print("Failed to send data to server")
+
+            print("Send: {}".format(data))
 
     """
         For receiving messages from server
     """
     def receive(self):
         while self.keep:
-            #self.lock.acquire()
+            
             try:
                 message = self.client.recv(1024).decode('ascii')
-
                 if message == 'NICK':
                     self.client.send(self.nick.encode('ascii'))
                 else:
-                    print(f"Server: {message}")
-                
+                    print(message)
             except:
+                # Close Connection When Error
                 print("An error occured!")
                 self.stop()
                 break
-            #self.lock.release()
+
+            
 
 name = input("Enter name: ")
 

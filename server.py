@@ -4,11 +4,11 @@ import threading
 class Server:
     def __init__(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.bind(("192.168.1.26", 55555))
+        self.s.bind(("192.168.1.25", 55555))
 
         self.keep = True
 
-        self.clients = []
+        self.clients = [] 
         self.names = []
 
     """
@@ -57,7 +57,8 @@ class Server:
             try:
                 # Receive message from client and send
                 message = client.recv(1024)
-                self.broadcast(message, client)
+
+                #self.broadcast(message, client)
 
                 index = self.clients.index(client)
                 print(f"{names[index]}: {message}")
@@ -98,7 +99,7 @@ class Server:
     def commands(self):
         command = input()
 
-        if command == "q":
+        if command == "__q__":
             self.stop()
         if command == "clients":
             print(self.clients)
